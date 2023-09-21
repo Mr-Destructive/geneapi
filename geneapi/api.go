@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	cohere "github.com/cohere-ai/cohere-go"
 	"github.com/mr-destructive/geneapi/geneapi/llms"
 	"github.com/mr-destructive/geneapi/geneapi/types"
 	"github.com/mr-destructive/palm"
@@ -97,6 +98,17 @@ func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmK
 		json.NewEncoder(w).Encode(&types.Response{
 			Response: response.Response,
 		})
+	case "cohereai":
+		if llmKeys["cohereai"] == "" {
+			json.NewEncoder(w).Encode(&types.Response{
+				Response: "cohereai key is required",
+			})
+			return
+		}
+		response := cohereAIGenerate(req, llmKeys["cohereai"])
+		json.NewEncoder(w).Encode(&types.Response{
+			Response: response,
+		})
 	}
 }
 
@@ -129,4 +141,12 @@ func palm2Generate(request *types.Request, apiKey string) *types.Response {
 	return &types.Response{
 		Response: response,
 	}
+}
+
+func cohereAIGenerate(request *types.Request, apiKey string) string {
+	params := cohere.GenerateOptions{
+		Prompt: request.Prompt,
+	}
+	response := llms.GenerateCohereAI(params, apiKey)
+	return response
 }

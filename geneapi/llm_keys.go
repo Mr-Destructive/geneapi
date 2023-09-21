@@ -59,12 +59,12 @@ func GetLLMKey(userID int64) (map[string]string, error) {
 	}
 	defer db.Close()
 
-	query := "SELECT openai, palm2, anthropic FROM llmapikeys WHERE user_id = ?"
+	query := "SELECT openai, palm2, anthropic, cohereai, huggingchat FROM llmapikeys WHERE user_id = ?"
 	rows := db.QueryRow(query, userID)
 	if err != nil {
 		return res, errors.New("failed to get LLM key")
 	}
-	err = rows.Scan(&nil_keys.Openai, &nil_keys.Palm2, &nil_keys.Anthropic)
+	err = rows.Scan(&nil_keys.Openai, &nil_keys.Palm2, &nil_keys.Anthropic, &nil_keys.CohereAI, &nil_keys.HuggingChat)
 	if err != nil {
 		return res, errors.New("failed to get LLM key")
 	}
