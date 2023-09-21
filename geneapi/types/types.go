@@ -1,4 +1,21 @@
-package geneapi
+package types
+
+type Request struct {
+	Prompt      string  `json:"prompt"`
+	Model       string  `json:"model"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float64 `json:"temperature"`
+	TopP        float64 `json:"top_p"`
+}
+
+type Model struct {
+	Name        string
+	Description string
+}
+
+type Response struct {
+	Response string `json:"response"`
+}
 
 type LLMAPIKey struct {
 	ID          int64  `json:"id"`
@@ -18,3 +35,4 @@ type User struct {
 	APIKey    string    `json:"apikey"`
 	LLMAPIKey LLMAPIKey `json:"llmkeys,omitempty"`
 }
+

@@ -6,13 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/mr-destructive/geneapi/geneapi/types"
 )
 
 type UserInfo struct {
 	Email    string `json:"email,omitempty"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	LLMAPIKey
+	types.LLMAPIKey
 }
 
 // Generate random API key
@@ -35,14 +37,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	llmkeys := LLMAPIKey{
+	llmkeys := types.LLMAPIKey{
 		Openai:      u.LLMAPIKey.Openai,
 		Palm2:       u.LLMAPIKey.Palm2,
 		Anthropic:   u.LLMAPIKey.Anthropic,
 		CohereAI:    u.LLMAPIKey.CohereAI,
 		HuggingChat: u.LLMAPIKey.HuggingChat,
 	}
-	user := User{
+	user := types.User{
 		Username:  u.Username,
 		Email:     u.Email,
 		Password:  u.Password,
@@ -63,24 +65,31 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func AuthenticateUser(w http.ResponseWriter, r *http.Request) {
+func AuthenticateUser(w http.ResponseWriter, r *http.Request) (map[string]string, bool) {
 	//takee user info
+	llmKeys := make(map[string]string)
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+		return llmKeys, false
 	}
 	// check the api key
 	apiKey := r.Header.Get("X-API-Key")
 	if apiKey == "" {
 		http.Error(w, "API key is required", http.StatusBadRequest)
-		return
+		return llmKeys, false
 	}
 	user, err := UserByAPIKey(DB, apiKey)
-	fmt.Println(user)
+	fmt.Println(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return llmKeys, false
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+	llmKeys, err = GetLLMKey(user.ID)
+	if err != nil {
+		return llmKeys, false
+	}
+
+	return llmKeys, true
 }

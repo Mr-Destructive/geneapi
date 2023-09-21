@@ -7,12 +7,13 @@ import (
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mr-destructive/geneapi/geneapi/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(user *User) (User, error) {
+func CreateUser(user *types.User) (types.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	nil_user := User{}
+	nil_user := types.User{}
 	if err != nil {
 		log.Fatal("failed to hash password")
 		return nil_user, errors.New("failed to create user")
@@ -49,7 +50,7 @@ func CreateUser(user *User) (User, error) {
 	if err != nil {
 		return nil_user, err
 	}
-	createdUser := User{
+	createdUser := types.User{
 		ID:        user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
@@ -59,8 +60,8 @@ func CreateUser(user *User) (User, error) {
 	return *&createdUser, nil
 }
 
-func GetUser(db *sql.DB, userId int64) (*User, error) {
-	user := User{}
+func GetUser(db *sql.DB, userId int64) (*types.User, error) {
+	user := types.User{}
 
 	row := db.QueryRow("SELECT id, username, email, password FROM user WHERE id = ?", userId)
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
@@ -82,11 +83,11 @@ func UserExists(db *sql.DB, email, username string) bool {
 	return false
 }
 
-func UserByAPIKey(db *sql.DB, apiKey string) (*User, error) {
+func UserByAPIKey(db *sql.DB, apiKey string) (*types.User, error) {
 	query := "SELECT id FROM user WHERE api_key = ?"
 	row := db.QueryRow(query, apiKey)
 
-	user := User{}
+	user := types.User{}
 	err := row.Scan(&user.ID)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func UserByAPIKey(db *sql.DB, apiKey string) (*User, error) {
 	llmQuery := "SELECT id, openai, palm2, anthropic, user_id FROM llmapiKeys WHERE user_id = ?"
 	row = db.QueryRow(llmQuery, user.ID)
 
-	llmkeys := LLMAPIKey{}
+	llmkeys := types.LLMAPIKey{}
 	err = row.Scan(&llmkeys.ID, &llmkeys.Openai, &llmkeys.Palm2, &llmkeys.Anthropic, &llmkeys.UserID)
 	user.LLMAPIKey = llmkeys
 
@@ -105,11 +106,11 @@ func UserByAPIKey(db *sql.DB, apiKey string) (*User, error) {
 	return &user, nil
 }
 
-func UserByEmail(db *sql.DB, email string) (*User, error) {
+func UserByEmail(db *sql.DB, email string) (*types.User, error) {
 	query := "SELECT id, email, username, password FROM user WHERE email = ?"
 	row := db.QueryRow(query, email)
 
-	user := User{}
+	user := types.User{}
 	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password)
 	if err != nil && err.Error() != "sql: no rows in result set" {
 		return nil, err
@@ -117,11 +118,11 @@ func UserByEmail(db *sql.DB, email string) (*User, error) {
 	return &user, nil
 }
 
-func UserByUsername(db *sql.DB, username string) (*User, error) {
+func UserByUsername(db *sql.DB, username string) (*types.User, error) {
 	query := "SELECT id, username, password FROM user WHERE username = ?"
 	row := db.QueryRow(query, username)
 
-	user := User{}
+	user := types.User{}
 	err := row.Scan(&user.ID, &user.Username, &user.Password)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("user %s not found", username)

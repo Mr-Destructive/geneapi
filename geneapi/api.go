@@ -2,23 +2,16 @@ package geneapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/mr-destructive/geneapi/geneapi/llms"
+	"github.com/mr-destructive/geneapi/geneapi/types"
+	"github.com/mr-destructive/palm"
+	"github.com/sashabaranov/go-openai"
 )
-
-type Model struct {
-	Name        string
-	Description string
-}
-
-type Request struct {
-	Prompt string `json:"prompt"`
-}
-
-type Response struct {
-	Response string `json:"response"`
-}
 
 func Generate(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
@@ -27,46 +20,81 @@ func Generate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
-	AuthenticateUser(w, r)
-	llm_name := parts[2]
-	modelsHandler(w, r, llm_name)
+	llmKeys, isAuth := AuthenticateUser(w, r)
+	fmt.Println(llmKeys, isAuth)
+	if !isAuth {
+		return
+	}
+	llmName := parts[2]
+	modelsHandler(w, r, llmName, llmKeys)
 }
 
-func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string) {
-	var prompt string
-	json.NewDecoder(r.Body).Decode(&prompt)
-	log.Println(prompt)
-	if prompt == "" {
-		json.NewEncoder(w).Encode(&Response{
+func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmKeys map[string]string) {
+	request := &types.Request{}
+	json.NewDecoder(r.Body).Decode(&request)
+	log.Println(request)
+	if request.Prompt == "" {
+		json.NewEncoder(w).Encode(&types.Response{
 			Response: "Prompt is required",
 		})
 		return
 	}
-	req := &Request{
-		Prompt: prompt,
+	req := &types.Request{
+		Prompt: request.Prompt,
 	}
 	switch llm_name {
 	case "openai":
-		response := openaiGenerate(req)
-		json.NewEncoder(w).Encode(&Response{
+		if llmKeys["openai"] == "" {
+			json.NewEncoder(w).Encode(&types.Response{
+				Response: "openai key is required",
+			})
+			return
+		}
+		response := openaiGenerate(req, llmKeys["openai"])
+		json.NewEncoder(w).Encode(&types.Response{
 			Response: response.Response,
 		})
 	case "palm2":
-		response := palm2Generate(req)
-		json.NewEncoder(w).Encode(&Response{
+		if llmKeys["palm2"] == "" {
+			json.NewEncoder(w).Encode(&types.Response{
+				Response: "palm2 key is required",
+			})
+			return
+		}
+		response := palm2Generate(req, llmKeys["palm2"])
+		json.NewEncoder(w).Encode(&types.Response{
 			Response: response.Response,
 		})
 	}
 }
 
-func openaiGenerate(request *Request) *Response {
-	return &Response{
-		Response: "text-davinci-003",
+func openaiGenerate(request *types.Request, apiKey string) *types.Response {
+	openAIRequest := &openai.CompletionRequest{
+		Prompt: request.Prompt,
+	}
+	if request.Model != "" {
+		openAIRequest.Model = request.Model
+	}
+	if request.MaxTokens != 0 {
+		openAIRequest.MaxTokens = request.MaxTokens
+	}
+	if request.Temperature != 0 {
+		openAIRequest.Temperature = float32(request.Temperature)
+	}
+	response := llms.GenerateOpenAI(*openAIRequest, apiKey)
+	return &types.Response{
+		Response: response,
 	}
 }
 
-func palm2Generate(request *Request) *Response {
-	return &Response{
-		Response: "text-bison-001",
+func palm2Generate(request *types.Request, apiKey string) *types.Response {
+	palmRequest := &palm.PromptConfig{
+		Prompt: palm.TextPrompt{
+			Text: request.Prompt,
+		},
+	}
+	response := llms.GeneratePaLM2(*palmRequest, apiKey)
+	return &types.Response{
+		Response: response,
 	}
 }

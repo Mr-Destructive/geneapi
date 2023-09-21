@@ -1,5 +1,11 @@
 github.com/mattn/go-sqlite3 v1.14.17 h1:mCRHCLDUBXgpKAqIKsaAaAsrAlbkeomtRFKXh2L6YIM=
 github.com/mattn/go-sqlite3 v1.14.17/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
+github.com/mr-destructive/palm v0.0.0-20230627070112-e2fa79b1d2bb h1:4juEOHwq+qqTrlseSUD9YV+in1QstIdlvjdqp1L14+w=
+github.com/mr-destructive/palm v0.0.0-20230627070112-e2fa79b1d2bb/go.mod h1:UgdgAe17cqKO8ZhQJLPd2kqIGB8kKnbNPx8GO5+cCp8=
+github.com/mr-destructive/palm v0.0.0-20230921093338-3b216f36ee7b h1:yRjgghVWUcpCByCMeilLjLthm0aIXiAUXvNFGtI4YR0=
+github.com/mr-destructive/palm v0.0.0-20230921093338-3b216f36ee7b/go.mod h1:UgdgAe17cqKO8ZhQJLPd2kqIGB8kKnbNPx8GO5+cCp8=
+github.com/sashabaranov/go-openai v1.15.3 h1:rzoNK9n+Cak+PM6OQ9puxDmFllxfnVea9StlmhglXqA=
+github.com/sashabaranov/go-openai v1.15.3/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
 github.com/yuin/goldmark v1.5.6 h1:COmQAWTCcGetChm3Ig7G/t8AFAN00t+o8Mt4cf7JpwA=
 github.com/yuin/goldmark v1.5.6/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.13.0 h1:mvySKfSWJ+UKUii46M40LOvyWfN0s2U+46/jDd0e6Ck=
