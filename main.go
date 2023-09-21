@@ -16,6 +16,7 @@ func handleRequests(port int) {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/register/", geneapi.Register)
 	http.HandleFunc("/generate/", geneapi.Generate)
+	http.HandleFunc("/update/keys/", geneapi.UpdateLLMAPIKeys)
 	log.Printf("Listening on port %d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }

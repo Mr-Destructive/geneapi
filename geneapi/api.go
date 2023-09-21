@@ -1,8 +1,8 @@
 package geneapi
 
 import (
+	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -20,13 +20,44 @@ func Generate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
-	llmKeys, isAuth := AuthenticateUser(w, r)
-	fmt.Println(llmKeys, isAuth)
-	if !isAuth {
+	llmKeys, userID, isAuth := AuthenticateUser(w, r)
+	if !isAuth || userID == -1 || userID == 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	llmName := parts[2]
 	modelsHandler(w, r, llmName, llmKeys)
+}
+
+func UpdateLLMAPIKeys(w http.ResponseWriter, r *http.Request) {
+	_, userID, isAuth := AuthenticateUser(w, r)
+	if !isAuth {
+		return
+	}
+	db, err := sql.Open("sqlite3", DB_PATH)
+	defer db.Close()
+	user, err := GetUser(db, int64(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	existingLLMKeys, err := GetLLMKey(int64(userID))
+
+	var llmkeyInput types.LLMAPIKeyInput
+	json.NewDecoder(r.Body).Decode(&llmkeyInput)
+	llmKeys := types.LLMAPIKey{
+		Openai:      llmkeyInput.Openai,
+		Palm2:       llmkeyInput.Palm2,
+		Anthropic:   llmkeyInput.Anthropic,
+		CohereAI:    llmkeyInput.CohereAI,
+		HuggingChat: llmkeyInput.HuggingChat,
+	}
+	updatedLLMKeys, err := UpdateLLMKeys(&llmKeys, existingLLMKeys, user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(updatedLLMKeys)
 }
 
 func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmKeys map[string]string) {
@@ -42,6 +73,7 @@ func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmK
 	req := &types.Request{
 		Prompt: request.Prompt,
 	}
+	w.Header().Set("Content-Type", "application/json")
 	switch llm_name {
 	case "openai":
 		if llmKeys["openai"] == "" {

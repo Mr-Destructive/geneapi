@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/mr-destructive/geneapi/geneapi/types"
@@ -65,31 +64,28 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func AuthenticateUser(w http.ResponseWriter, r *http.Request) (map[string]string, bool) {
+func AuthenticateUser(w http.ResponseWriter, r *http.Request) (map[string]string, int, bool) {
 	//takee user info
 	llmKeys := make(map[string]string)
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return llmKeys, false
+		return llmKeys, -1, false
 	}
 	// check the api key
 	apiKey := r.Header.Get("X-API-Key")
 	if apiKey == "" {
 		http.Error(w, "API key is required", http.StatusBadRequest)
-		return llmKeys, false
+		return llmKeys, -1, false
 	}
 	user, err := UserByAPIKey(DB, apiKey)
-	fmt.Println(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return llmKeys, false
+		return llmKeys, -1, false
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
 	llmKeys, err = GetLLMKey(user.ID)
 	if err != nil {
-		return llmKeys, false
+		return llmKeys, -1, false
 	}
 
-	return llmKeys, true
+	return llmKeys, int(user.ID), true
 }

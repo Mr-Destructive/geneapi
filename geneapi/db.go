@@ -2,7 +2,6 @@ package geneapi
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -38,8 +37,6 @@ func Connect(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("pinging")
-
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
@@ -49,7 +46,6 @@ func Connect(dbPath string) (*sql.DB, error) {
 
 func runMigrations(db *sql.DB) error {
 	path := "geneapi/" + "migrations"
-	fmt.Println(path)
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return err
@@ -61,7 +57,6 @@ func runMigrations(db *sql.DB) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println(path)
 			_, err = db.Exec(string(sql))
 			if err != nil {
 				return err

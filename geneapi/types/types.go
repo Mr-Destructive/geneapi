@@ -36,3 +36,10 @@ type User struct {
 	LLMAPIKey LLMAPIKey `json:"llmkeys,omitempty"`
 }
 
+type LLMAPIKeyInput struct {
+	Openai      string `json:"openai,omitempty"`
+	Palm2       string `json:"palm2,omitempty"`
+	Anthropic   string `json:"anthropic,omitempty"`
+	CohereAI    string `json:"cohereai,omitempty"`
+	HuggingChat string `json:"huggingchat,omitempty"`
+}

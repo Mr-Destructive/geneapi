@@ -2,7 +2,7 @@ package llms
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -15,7 +15,7 @@ func GenerateOpenAI(request openai.CompletionRequest, apiKey string) string {
 	)
 
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("ChatCompletion error: %v\n", err)
 		return ""
 	}
 

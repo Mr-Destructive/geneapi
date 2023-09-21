@@ -1,7 +1,7 @@
 package llms
 
 import (
-	"fmt"
+	"log"
 
 	palm "github.com/mr-destructive/palm"
 )
@@ -9,13 +9,15 @@ import (
 func GeneratePaLM2(request palm.PromptConfig, apiKey string) string {
 	client := palm.NewClient(apiKey)
 	prompt := request.Prompt.Text
-	resp, err := client.ChatPrompt(prompt)
-    fmt.Println(resp)
-
-	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+	if client == nil {
+		log.Printf("Could not create client, invalid API key\n")
 		return ""
 	}
+	resp, err := client.ChatPrompt(prompt)
 
+	if err != nil {
+		log.Printf("ChatCompletion error: %v\n", err)
+		return ""
+	}
 	return resp.Candidates[0].Output
 }
