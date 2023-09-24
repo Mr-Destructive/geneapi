@@ -24,9 +24,7 @@ func handleRequests(port int) {
 func main() {
 	port := 8080
 	log.Println(port)
-	dbPath := "geneapi/db.sqlite3"
-	log.Println(dbPath)
-	err := geneapi.InitDB(dbPath)
+	err := geneapi.InitDB()
 	if err != nil {
 		log.Fatal(err)
 	}

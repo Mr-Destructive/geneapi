@@ -2,19 +2,35 @@ package geneapi
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-const DB_PATH = "geneapi/db.sqlite3"
+var (
+	DBHost     = os.Getenv("DB_HOST")
+	DBUser     = os.Getenv("DB_USER")
+	DBPassword = os.Getenv("DB_PASSWORD")
+	DBName     = os.Getenv("DB_NAME")
+	DBURL      = os.Getenv("DB_URL")
+	DBPort     = 5432
+)
 
-func InitDB(dbPath string) error {
-	db, err := sql.Open("sqlite3", dbPath)
+var DB_URL string = os.Getenv("DB_URL")
+
+func InitDB() error {
+	var connStr string
+	if DBURL == "" {
+		connStr = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPassword, DBName)
+	} else {
+		connStr = DBURL
+	}
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return err
 	}
@@ -28,8 +44,9 @@ func InitDB(dbPath string) error {
 	return nil
 }
 
-func Connect(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+func Connect() (*sql.DB, error) {
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPassword, DBName)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +62,7 @@ func Connect(dbPath string) (*sql.DB, error) {
 }
 
 func runMigrations(db *sql.DB) error {
-	path := "geneapi/" + "migrations"
+	path := "geneapi/migrations"
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return err

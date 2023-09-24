@@ -10,8 +10,8 @@ import (
 	cohere "github.com/cohere-ai/cohere-go"
 	"github.com/mr-destructive/geneapi/geneapi/llms"
 	"github.com/mr-destructive/geneapi/geneapi/types"
-	"github.com/mr-destructive/palm"
-	"github.com/sashabaranov/go-openai"
+	palm "github.com/mr-destructive/palm"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 func Generate(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +35,7 @@ func UpdateLLMAPIKeys(w http.ResponseWriter, r *http.Request) {
 	if !isAuth {
 		return
 	}
-	db, err := sql.Open("sqlite3", DB_PATH)
+	db, err := sql.Open("postgres", DB_URL)
 	defer db.Close()
 	user, err := GetUser(db, int64(userID))
 	if err != nil {

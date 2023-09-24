@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 
+    _ "github.com/lib/pq"
 	"github.com/mr-destructive/geneapi/geneapi/types"
 )
 
@@ -14,7 +15,7 @@ func CreateLLMKey(LLMKey *types.LLMAPIKey, userID int64) (types.LLMAPIKey, error
 		return nil_keys, errors.New("failed to insert LLM key")
 	}
 
-	db, err := sql.Open("sqlite3", DB_PATH)
+	db, err := sql.Open("postgres", DB_URL)
 	if err != nil {
 		log.Printf("failed to open database: %w", err)
 		return nil_keys, errors.New("failed to insert LLM key")
@@ -52,7 +53,7 @@ func CreateLLMKey(LLMKey *types.LLMAPIKey, userID int64) (types.LLMAPIKey, error
 func GetLLMKey(userID int64) (map[string]string, error) {
 	nil_keys := types.LLMAPIKey{}
 	res := make(map[string]string)
-	db, err := sql.Open("sqlite3", DB_PATH)
+	db, err := sql.Open("postgres", DB_URL)
 	if err != nil {
 		log.Printf("failed to open database: %w", err)
 		return res, errors.New("failed to get LLM key")
@@ -97,7 +98,7 @@ func UpdateLLMKeys(LLMKey *types.LLMAPIKey, existingLLMKeys map[string]string, u
 		LLMKey.Palm2 = existingLLMKeys["palm2"]
 	}
 
-	db, err := sql.Open("sqlite3", DB_PATH)
+	db, err := sql.Open("postgres", DB_URL)
 	if err != nil {
 		log.Printf("failed to open database: %w", err)
 		return nil_keys, errors.New("failed to update LLM key")

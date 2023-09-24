@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+    _ "github.com/lib/pq"
 	"github.com/mr-destructive/geneapi/geneapi/types"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,7 +19,7 @@ func CreateUser(user *types.User) (types.User, error) {
 		return nil_user, errors.New("failed to create user")
 	}
 
-	db, err := sql.Open("sqlite3", DB_PATH)
+	db, err := sql.Open("postgres", DB_URL)
 	if err != nil {
 		log.Printf("failed to open database: %w", err)
 		return nil_user, errors.New("failed to create user")
