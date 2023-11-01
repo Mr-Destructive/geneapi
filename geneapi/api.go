@@ -3,6 +3,7 @@ package geneapi
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -14,6 +15,9 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
+func GeneAI(prompt, llmName string, llmKeys map[string]string) (string, error) {
+	return geneHandler(prompt, llmName, llmKeys)
+}
 func Generate(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	// Check if the URL has at least 3 parts (including an empty string)
@@ -59,6 +63,36 @@ func UpdateLLMAPIKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(updatedLLMKeys)
+}
+
+func geneHandler(prompt, llm_name string, llmKeys map[string]string) (string, error) {
+	if prompt == "" {
+		return "", errors.New("Prompt is required")
+	}
+	req := &types.Request{
+		Prompt: prompt,
+	}
+	switch llm_name {
+	case "openai":
+		if llmKeys["openai"] == "" {
+			return "", errors.New("openai key is required")
+		}
+		response := openaiGenerate(req, llmKeys["openai"])
+		return response.Response, nil
+	case "palm2":
+		if llmKeys["palm2"] == "" {
+			return "", errors.New("palm2 key is required")
+		}
+		response := palm2Generate(req, llmKeys["palm2"])
+		return response.Response, nil
+	case "cohereai":
+		if llmKeys["cohereai"] == "" {
+			return "", errors.New("cohereai key is required")
+		}
+		response := cohereAIGenerate(req, llmKeys["cohereai"])
+		return response, nil
+	}
+	return "", errors.New("Invalid llm name")
 }
 
 func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmKeys map[string]string) {

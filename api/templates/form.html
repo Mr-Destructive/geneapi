@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GeneAI</title>
+        <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    </head>
+    <body>
+        <h1>GeneAI</h1>
+        <form hx-post="/" hx-swap="#result">
+            <input type="text" name="prompt" placeholder="Prompt">
+            <select name="model">
+                <option value="palm2" selected>PaLM2</option>
+                <option value="cohereai">Cohere</option>
+                <option value="openai">OpenAI</option>
+            </select>
+            <input type="submit" value="Submit">
+        </form>
+        <p id="result"></p>
+    </body>
+</html>
+
