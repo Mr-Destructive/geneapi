@@ -12,7 +12,6 @@ import (
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		fmt.Println(os.Getenv("cohereai"))
 		//create a tempalte
 		templateStr := `<!DOCTYPE html>
         <html>
@@ -22,7 +21,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
             </head>
             <body>
                 <h1>GeneAI</h1>
-                <form hx-post="/" hx-swap="#result">
+                <form hx-post="/" hx-swap="innerHTML" hx-target="#result">
                     <input type="text" name="prompt" placeholder="Prompt">
                     <select name="model">
                         <option value="palm2" selected>PaLM2</option>
@@ -53,7 +52,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		w.Write([]byte(resp))
+		tmpl := template.New("result")
+		t, err := tmpl.Parse(resp)
+		t.Execute(w, nil)
 	}
 }
 

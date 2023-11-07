@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/3JoB/anthropic-sdk-go"
 	cohere "github.com/cohere-ai/cohere-go"
 	"github.com/mr-destructive/geneapi/geneapi/llms"
 	"github.com/mr-destructive/geneapi/geneapi/types"
@@ -90,6 +91,12 @@ func geneHandler(prompt, llm_name string, llmKeys map[string]string) (string, er
 			return "", errors.New("cohereai key is required")
 		}
 		response := cohereAIGenerate(req, llmKeys["cohereai"])
+		return response, nil
+	case "anthropic":
+		if llmKeys["anthropic"] == "" {
+			return "", errors.New("anthropic key is required")
+		}
+		response := anthropicGenerate(req, llmKeys["anthropic"])
 		return response, nil
 	}
 	return "", errors.New("Invalid llm name")
@@ -182,5 +189,15 @@ func cohereAIGenerate(request *types.Request, apiKey string) string {
 		Prompt: request.Prompt,
 	}
 	response := llms.GenerateCohereAI(params, apiKey)
+	return response
+}
+
+func anthropicGenerate(request *types.Request, apiKey string) string {
+	params := anthropic.Opts{
+		Sender: anthropic.Sender{
+			Prompt: request.Prompt,
+		},
+	}
+	response := llms.GenerateAnthropicAI(params, apiKey)
 	return response
 }
