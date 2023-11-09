@@ -5,9 +5,11 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mr-destructive/geneapi/geneapi"
+	"github.com/mr-destructive/geneapi/geneapi/types"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +30,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
                         <option value="cohereai">Cohere</option>
                         <option value="openai">OpenAI</option>
                     </select>
+                    <input type="number" name="max-tokens" placeholder="Max Tokens" min="20" max="800">
+                    <input type="number" name="temperature" placeholder="Temperature" min="0" max="1">
                     <input type="submit" value="Submit">
                 </form>
                 <p id="result"></p>
@@ -42,13 +46,26 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		prompt := r.FormValue("prompt")
+		//convert to int
+		maxTokens, err := strconv.Atoi(r.FormValue("max-tokens"))
+		if err != nil {
+			panic(err)
+		}
+		temperature, err := strconv.ParseFloat(r.FormValue("temperature"), 64)
 		model := r.FormValue("model")
 		apiKeys := map[string]string{
 			"openai":   os.Getenv("openai"),
 			"palm2":    os.Getenv("palm2"),
 			"cohereai": os.Getenv("cohereai"),
 		}
-		resp, err := geneapi.GeneAI(prompt, model, apiKeys)
+		req := &types.Request{
+			Prompt:      prompt,
+			MaxTokens:   maxTokens,
+			Temperature: temperature,
+		}
+		fmt.Println(req)
+		resp, err := geneapi.GeneAI(*req, model, apiKeys)
+        fmt.Println(resp)
 		if err != nil {
 			panic(err)
 		}

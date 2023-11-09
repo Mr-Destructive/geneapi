@@ -16,8 +16,8 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-func GeneAI(prompt, llmName string, llmKeys map[string]string) (string, error) {
-	return geneHandler(prompt, llmName, llmKeys)
+func GeneAI(req types.Request, llmName string, llmKeys map[string]string) (string, error) {
+	return geneHandler(req, llmName, llmKeys)
 }
 func Generate(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
@@ -66,37 +66,34 @@ func UpdateLLMAPIKeys(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedLLMKeys)
 }
 
-func geneHandler(prompt, llm_name string, llmKeys map[string]string) (string, error) {
-	if prompt == "" {
+func geneHandler(request types.Request, llm_name string, llmKeys map[string]string) (string, error) {
+	if request.Prompt == "" {
 		return "", errors.New("Prompt is required")
-	}
-	req := &types.Request{
-		Prompt: prompt,
 	}
 	switch llm_name {
 	case "openai":
 		if llmKeys["openai"] == "" {
 			return "", errors.New("openai key is required")
 		}
-		response := openaiGenerate(req, llmKeys["openai"])
+		response := openaiGenerate(&request, llmKeys["openai"])
 		return response.Response, nil
 	case "palm2":
 		if llmKeys["palm2"] == "" {
 			return "", errors.New("palm2 key is required")
 		}
-		response := palm2Generate(req, llmKeys["palm2"])
+		response := palm2Generate(&request, llmKeys["palm2"])
 		return response.Response, nil
 	case "cohereai":
 		if llmKeys["cohereai"] == "" {
 			return "", errors.New("cohereai key is required")
 		}
-		response := cohereAIGenerate(req, llmKeys["cohereai"])
+		response := cohereAIGenerate(&request, llmKeys["cohereai"])
 		return response, nil
 	case "anthropic":
 		if llmKeys["anthropic"] == "" {
 			return "", errors.New("anthropic key is required")
 		}
-		response := anthropicGenerate(req, llmKeys["anthropic"])
+		response := anthropicGenerate(&request, llmKeys["anthropic"])
 		return response, nil
 	}
 	return "", errors.New("Invalid llm name")
@@ -113,7 +110,9 @@ func modelsHandler(w http.ResponseWriter, r *http.Request, llm_name string, llmK
 		return
 	}
 	req := &types.Request{
-		Prompt: request.Prompt,
+		Prompt:      request.Prompt,
+		MaxTokens:   request.MaxTokens,
+		Temperature: request.Temperature,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	switch llm_name {
@@ -177,6 +176,8 @@ func palm2Generate(request *types.Request, apiKey string) *types.Response {
 		Prompt: palm.TextPrompt{
 			Text: request.Prompt,
 		},
+		MaxOutputTokens: request.MaxTokens,
+		Temperature:     request.Temperature,
 	}
 	response := llms.GeneratePaLM2(*palmRequest, apiKey)
 	return &types.Response{
@@ -185,8 +186,12 @@ func palm2Generate(request *types.Request, apiKey string) *types.Response {
 }
 
 func cohereAIGenerate(request *types.Request, apiKey string) string {
+	maxTokens := uint(request.MaxTokens)
+	temperature := float64(request.Temperature)
 	params := cohere.GenerateOptions{
-		Prompt: request.Prompt,
+		Prompt:      request.Prompt,
+		MaxTokens:   &maxTokens,
+		Temperature: &temperature,
 	}
 	response := llms.GenerateCohereAI(params, apiKey)
 	return response
@@ -195,7 +200,8 @@ func cohereAIGenerate(request *types.Request, apiKey string) string {
 func anthropicGenerate(request *types.Request, apiKey string) string {
 	params := anthropic.Opts{
 		Sender: anthropic.Sender{
-			Prompt: request.Prompt,
+			Prompt:   request.Prompt,
+			MaxToken: request.MaxTokens,
 		},
 	}
 	response := llms.GenerateAnthropicAI(params, apiKey)
